@@ -9,6 +9,7 @@ Veilbooks Core is a small TypeScript library with the cryptographic building blo
 - **Sealed invoices**: `sealInvoice` and `openInvoice` encrypt an invoice to several recipients (ML-KEM-1024 with X25519) and verify its commitment when opened.
 - **Commitments**: `commitInvoice` and `commitManifest` produce hashes that reveal nothing about amounts.
 - **Key registration**: builders for the ML-DSA-87 key registration message with proof of possession, and for the ML-KEM-1024 encryption key registration message.
+- **Payment manifest**: `parseManifest` checks the run file Desk exports and Rail reads (unique ids, valid payees, positive whole amounts, extra fields such as names dropped), and `manifestTotalUqor` sums it.
 - **Browser safe**: hashing uses `@noble/hashes`, with no Node-only modules.
 
 ## Quick start
@@ -36,12 +37,14 @@ const opened = openInvoice(sealed, payee, invoice.id);
 | Non-recipient opens it | Refused |
 | Wrong invoice id | Refused (id is authenticated data) |
 | Tampered envelope or swapped commitment | Refused |
+| Manifest with a duplicate id, bad payee or bad amount | Refused with the line number |
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
 | `src/invoice.ts` | Sealing, opening, commitments |
+| `src/manifest.ts` | Payment manifest type, parser and total |
 | `src/register.ts` | Key registration message builders |
 | `test/` | Unit tests |
 
