@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/ayushsingh82/veilbooks-core#readme",
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "@qorechain/pqc": "^0.2.3",
     "@qorechain/qoreseal": "^0.1.0",
     "@qorechain/qoresign": "^0.2.0",

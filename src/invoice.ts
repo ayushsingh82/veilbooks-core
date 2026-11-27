@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { open, seal, recipientOf, type SealKeyPair, type SealRecipient } from "@qorechain/qoreseal";
 
 export const CHAIN_ID = "qorechain-diana";
@@ -25,8 +25,10 @@ function canonical(inv: Invoice): Uint8Array {
   return new TextEncoder().encode(JSON.stringify(o));
 }
 
+const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+
 export function commitInvoice(inv: Invoice): string {
-  return createHash("sha256").update(canonical(inv)).digest("hex");
+  return hex(sha256(canonical(inv)));
 }
 
 /**
@@ -51,9 +53,7 @@ export function openInvoice(sealed: SealedInvoice, keys: SealKeyPair, invoiceId:
 
 /** Commitment over a whole payroll or payment run: hash of the sorted invoice commitments. */
 export function commitManifest(commitments: string[]): string {
-  const h = createHash("sha256");
-  for (const c of [...commitments].sort()) h.update(c);
-  return h.digest("hex");
+  return hex(sha256(new TextEncoder().encode([...commitments].sort().join(""))));
 }
 
 export { recipientOf };
