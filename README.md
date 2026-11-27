@@ -1,24 +1,66 @@
 # Veilbooks Core
 
-Shared library for Veilbooks: key registration, sealing, signing, receipt verification.
+> Shared building blocks for private business payments on QoreChain.
 
-Entry in the QoreChain "Build Before Q-Day" developer fest, category: none (shared library). Apache-2.0.
+Veilbooks Core is a small TypeScript library with the cryptographic building blocks shared by the other Veilbooks projects: sealed invoices with an optional auditor recipient, public commitments, run commitments, and builders for registering post-quantum keys.
 
-_Work in progress._
+## Features
 
-## Status
-Work in progress for the QoreChain "Build Before Q-Day" developer fest (deadline 2 December 2026). Network: QoreChain testnet `qorechain-diana`.
+- **Sealed invoices**: `sealInvoice` and `openInvoice` encrypt an invoice to several recipients (ML-KEM-1024 with X25519) and verify its commitment when opened.
+- **Commitments**: `commitInvoice` and `commitManifest` produce hashes that reveal nothing about amounts.
+- **Key registration**: builders for the ML-DSA-87 key registration message with proof of possession, and for the ML-KEM-1024 encryption key registration message.
+- **Browser safe**: hashing uses `@noble/hashes`, with no Node-only modules.
+
+## Quick start
+
+Requires Node.js 20 or newer.
+
+```sh
+npm install
+npm test
+```
+
+```ts
+import { generateSealKeys, recipientOf, sealInvoice, openInvoice } from "./src/index.js";
+
+const payee = generateSealKeys();
+const sealed = sealInvoice(invoice, [recipientOf(payee)]);
+const opened = openInvoice(sealed, payee, invoice.id);
+```
+
+## Behaviour
+
+| Case | Result |
+| --- | --- |
+| Recipient opens the envelope | Invoice returned, commitment verified |
+| Non-recipient opens it | Refused |
+| Wrong invoice id | Refused (id is authenticated data) |
+| Tampered envelope or swapped commitment | Refused |
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `src/invoice.ts` | Sealing, opening, commitments |
+| `src/register.ts` | Key registration message builders |
+| `test/` | Unit tests |
+
+## Status and limits
+
+- Registration builders produce messages only. Broadcasting them needs a funded, signed transaction.
+- Veilbooks Desk currently keeps its own copy of the sealing code; moving it onto this package is planned.
 
 ## The Veilbooks suite
-| Repo | Role | Category |
-|---|---|---|
-| [veilbooks-rail](https://github.com/ayushsingh82/veilbooks-rail) | Settlement rollup | Protocol Builders |
-| [veilbooks-desk](https://github.com/ayushsingh82/veilbooks-desk) | Sealed invoices and payroll app | Encrypted Apps |
-| [veilbooks-steward](https://github.com/ayushsingh82/veilbooks-steward) | Agent that pays within signed limits | Post-Quantum AI Agents |
-| [veilbooks-core](https://github.com/ayushsingh82/veilbooks-core) | Shared library | not entered |
 
-## What is in it
-Sealed invoices (`sealInvoice`, `openInvoice`) with an auditor recipient and a manifest commitment. Key registration and receipt helpers are next. Run `npm test`.
+| Repository | Role |
+| --- | --- |
+| [veilbooks-rail](https://github.com/ayushsingh82/veilbooks-rail) | Settlement rollup for private business payments |
+| [veilbooks-desk](https://github.com/ayushsingh82/veilbooks-desk) | Sealed invoices and payroll for people and auditors |
+| [veilbooks-steward](https://github.com/ayushsingh82/veilbooks-steward) | Agent that pays invoices within limits the owner signed |
+| [veilbooks-core](https://github.com/ayushsingh82/veilbooks-core) | Shared library: sealing, commitments, key registration |
 
-## Licence
-Apache-2.0. AI use is documented in [AI_USAGE.md](AI_USAGE.md).
+Veilbooks keeps business payment amounts private, with signatures and encryption designed to remain secure against quantum attacks. It runs on the QoreChain testnet (`qorechain-diana`).
+
+## Licence and AI use
+
+Apache-2.0. See [AI_USAGE.md](AI_USAGE.md) for how AI tools were used.
